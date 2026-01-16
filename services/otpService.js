@@ -41,39 +41,20 @@ exports.sendSMS = async (phone, message) => {
 
 exports.sendEmail = async (email, subject, text) => {
     try {
-        const host = cleanEnv(process.env.MAIL_HOST);
-        const port = cleanEnv(process.env.MAIL_PORT);
         const user = cleanEnv(process.env.MAIL_USERNAME);
         const pass = cleanEnv(process.env.MAIL_PASSWORD);
         const fromName = cleanEnv(process.env.MAIL_FROM_NAME);
-        const fromAddr = cleanEnv(process.env.MAIL_FROM_ADDRESS);
 
-        // Create transport options
-        let transportOptions = {
-            host: host,
-            port: parseInt(port),
-            secure: parseInt(port) === 465,
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
             auth: {
                 user: user,
                 pass: pass,
             },
-        };
-
-        // For Gmail, using 'service' is more reliable as it handles all correct flags automatically
-        if (host.includes("gmail.com")) {
-            transportOptions = {
-                service: 'gmail',
-                auth: {
-                    user: user,
-                    pass: pass,
-                },
-            };
-        }
-
-        const transporter = nodemailer.createTransport(transportOptions);
+        });
 
         const mailOptions = {
-            from: `"${fromName}" <${fromAddr}>`,
+            from: `"${fromName}" <${user}>`,
             to: email,
             subject: subject,
             text: text,
