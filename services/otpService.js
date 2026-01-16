@@ -22,11 +22,11 @@ exports.sendSMS = async (phone, message) => {
             mobile: phone,
         };
 
-        console.log("Sending SMS with data:", { ...data, apikey: "HIDDEN" });
+
 
         const response = await axios.post(url, data);
 
-        console.log("SMS response:", response.data);
+
 
         if (response.data['response-code'] !== 200) {
             console.error("SMS API Error Details:", response.data.errors);
@@ -66,7 +66,7 @@ exports.sendEmail = async (email, subject, text) => {
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent successfully:", info.messageId);
+        // console.log("Email sent successfully:", info.messageId);
         return { success: true, message: "Email sent", messageId: info.messageId };
     } catch (error) {
         console.error("Email error details:", error);

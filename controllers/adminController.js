@@ -61,8 +61,22 @@ exports.getAllTasks = async (req, res) => {
 // Get task statistics
 exports.getStatistics = async (req, res) => {
     try {
-        const totalTasks = await Task.countDocuments();
+        const { startDate, endDate } = req.query;
+        let query = {};
+
+        if (startDate || endDate) {
+            query.timestamp = {};
+            if (startDate) query.timestamp.$gte = new Date(startDate);
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                query.timestamp.$lte = end;
+            }
+        }
+
+        const totalTasks = await Task.countDocuments(query);
         const tasksByType = await Task.aggregate([
+            { $match: query },
             {
                 $group: {
                     _id: "$type",
@@ -71,7 +85,7 @@ exports.getStatistics = async (req, res) => {
             },
         ]);
 
-        const recentTasks = await Task.find()
+        const recentTasks = await Task.find(query)
             .sort({ timestamp: -1 })
             .limit(5)
             .select("type technician.name timestamp location.address");
