@@ -48,7 +48,8 @@ exports.sendEmail = async (email, subject, text) => {
         const fromName = cleanEnv(process.env.MAIL_FROM_NAME);
         const fromAddr = cleanEnv(process.env.MAIL_FROM_ADDRESS);
 
-        const transporter = nodemailer.createTransport({
+        // Create transport options
+        let transportOptions = {
             host: host,
             port: parseInt(port),
             secure: parseInt(port) === 465,
@@ -56,7 +57,20 @@ exports.sendEmail = async (email, subject, text) => {
                 user: user,
                 pass: pass,
             },
-        });
+        };
+
+        // For Gmail, using 'service' is more reliable as it handles all correct flags automatically
+        if (host.includes("gmail.com")) {
+            transportOptions = {
+                service: 'gmail',
+                auth: {
+                    user: user,
+                    pass: pass,
+                },
+            };
+        }
+
+        const transporter = nodemailer.createTransport(transportOptions);
 
         const mailOptions = {
             from: `"${fromName}" <${fromAddr}>`,
