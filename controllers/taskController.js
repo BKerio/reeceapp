@@ -2,6 +2,7 @@ const Task = require("../models/Task");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const sharp = require("sharp");
 
 // Ensure uploads directory exists
 const uploadDir = "uploads/tasks";
@@ -9,21 +10,32 @@ if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer Storage Configuration
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, uploadDir);
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
-    },
-});
+// Multer Memory Storage (to process before saving)
+const storage = multer.memoryStorage();
 
 const upload = multer({ storage: storage }).fields([
     { name: "photos", maxCount: 10 },
     { name: "sketch", maxCount: 1 }
 ]);
+
+// Helper to process and save images
+const processImage = async (buffer, originalName, type = 'photo') => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const filename = `${uniqueSuffix}.webp`;
+    const filePath = path.join(uploadDir, filename);
+
+    let pipeline = sharp(buffer);
+
+    // Apply resizing and WebP conversion
+    if (type === 'sketch') {
+        pipeline = pipeline.resize(1000, null, { withoutEnlargement: true }).webp({ quality: 85 });
+    } else {
+        pipeline = pipeline.resize(1200, null, { withoutEnlargement: true }).webp({ quality: 80 });
+    }
+
+    await pipeline.toFile(filePath);
+    return filePath;
+};
 
 exports.submitTask = (req, res) => {
     upload(req, res, async function (err) {
@@ -51,9 +63,19 @@ exports.submitTask = (req, res) => {
                 sketchWidth,
             } = req.body;
 
-            // Extract file paths
-            const photoPaths = req.files.photos ? req.files.photos.map((file) => file.path) : [];
-            const sketchPath = req.files.sketch ? req.files.sketch[0].path : null;
+            // Process files using sharp
+            const photoPaths = [];
+            if (req.files.photos) {
+                for (const file of req.files.photos) {
+                    const savedPath = await processImage(file.buffer, file.originalname, 'photo');
+                    photoPaths.push(savedPath);
+                }
+            }
+
+            let sketchPath = null;
+            if (req.files.sketch) {
+                sketchPath = await processImage(req.files.sketch[0].buffer, req.files.sketch[0].originalname, 'sketch');
+            }
 
             const taskData = {
                 technician: {
@@ -74,12 +96,10 @@ exports.submitTask = (req, res) => {
                 timestamp: new Date(),
             };
 
-            // Add sketch data if provided
             if (sketchPath) {
                 taskData.sketch = sketchPath;
             }
 
-            // Add sketch measurements if provided
             if (sketchHeight || sketchLength || sketchWidth) {
                 taskData.sketchMeasurements = {
                     height: sketchHeight || "",
@@ -128,7 +148,11 @@ exports.updateTask = (req, res) => {
         try {
             const taskId = req.params.id;
             const { dimensions, sketchHeight, sketchLength, sketchWidth } = req.body;
-            const sketchPath = req.files.sketch ? req.files.sketch[0].path : null;
+
+            let sketchPath = null;
+            if (req.files.sketch) {
+                sketchPath = await processImage(req.files.sketch[0].buffer, req.files.sketch[0].originalname, 'sketch');
+            }
 
             const updateData = {};
             if (dimensions) {
