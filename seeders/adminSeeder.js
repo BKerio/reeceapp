@@ -22,15 +22,15 @@ const seedAdmin = async () => {
 
         // Create admin
         const admin = new Admin({
-            email: "task@gmail.com",
+            email: "kipthedesigner@gmail.com",
             password: hashedPassword,
-            name: "Task Admin",
+            name: "Kip The Designer",
         });
 
         await admin.save();
         console.log("Admin seeded successfully!");
-        console.log("Email: task@gmail.com");
-        console.log("Password: 123456");
+        console.log("Email: kipthedesigner@gmail.com");
+        console.log("Password: creative,1");
 
         process.exit(0);
     } catch (error) {
