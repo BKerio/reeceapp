@@ -109,6 +109,17 @@ exports.submitTask = (req, res) => {
                 message: "Task submitted successfully",
                 task: newTask,
             });
+
+            // Audit Log
+            const { logAction } = require("./auditController");
+            logAction({
+                action: 'TASK_SUBMIT',
+                description: `New task from ${technicianEmail}`,
+                user: technicianEmail,
+                role: 'USER',
+                ip: req.ip,
+                metadata: { taskId: newTask._id, type }
+            });
         } catch (error) {
             console.error("Task submission error:", error);
             res.status(500).json({ message: "Failed to submit task" });
@@ -175,6 +186,17 @@ exports.updateTask = (req, res) => {
             res.status(200).json({
                 message: "Task updated successfully",
                 task: updatedTask,
+            });
+
+            // Audit Log
+            const { logAction } = require("./auditController");
+            logAction({
+                action: 'TASK_UPDATE',
+                description: `Task updated (ID: ${taskId})`,
+                user: updatedTask.technician.email, // Assuming technician email is preserved
+                role: 'USER', // Or ADMIN if updated by admin, but usually app updates
+                ip: req.ip,
+                metadata: { taskId, dimensions: updateData.dimensions }
             });
         } catch (error) {
             console.error("Task update error:", error);

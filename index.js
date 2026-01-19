@@ -5,6 +5,7 @@ const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 const path = require("path");
 
 const app = express();
@@ -20,6 +21,7 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/users", userRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/audit", auditRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGO_URI)

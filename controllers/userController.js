@@ -68,6 +68,16 @@ exports.login = async (req, res) => {
                 phone: user.phone,
             },
         });
+
+        // Audit Log
+        const { logAction } = require("./auditController");
+        logAction({
+            action: 'LOGIN',
+            description: `User verified login: ${user.email}`,
+            user: user.email,
+            role: 'USER',
+            ip: req.ip
+        });
     } catch (error) {
         console.error("Login error:", error);
         res.status(500).json({ message: "Server error during login" });

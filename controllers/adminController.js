@@ -41,6 +41,16 @@ exports.login = async (req, res) => {
                 name: admin.name,
             },
         });
+
+        // Audit Log
+        const { logAction } = require("./auditController");
+        logAction({
+            action: 'LOGIN',
+            description: `Admin access: ${admin.email}`,
+            user: admin.email,
+            role: 'ADMIN',
+            ip: req.ip
+        });
     } catch (error) {
         console.error("Admin login error:", error);
         res.status(500).json({ message: "Server error during login" });
