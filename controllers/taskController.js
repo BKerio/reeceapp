@@ -1,41 +1,34 @@
 const Task = require("../models/Task");
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
-const sharp = require("sharp");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
-// Ensure uploads directory exists
-const uploadDir = "uploads/tasks";
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
-// Multer Memory Storage (to process before saving)
-const storage = multer.memoryStorage();
+// Configure Cloudinary Storage
+
+
+// Multer Cloudinary Storage
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: "tasks",
+        allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    },
+});
 
 const upload = multer({ storage: storage }).fields([
     { name: "photos", maxCount: 10 },
     { name: "sketch", maxCount: 1 }
 ]);
 
-// Helper to process and save images
-const processImage = async (buffer, originalName, type = 'photo') => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const filename = `${uniqueSuffix}.webp`;
-    const filePath = path.join(uploadDir, filename);
 
-    let pipeline = sharp(buffer);
-
-    // Apply resizing and WebP conversion
-    if (type === 'sketch') {
-        pipeline = pipeline.resize(1000, null, { withoutEnlargement: true }).webp({ quality: 85 });
-    } else {
-        pipeline = pipeline.resize(1200, null, { withoutEnlargement: true }).webp({ quality: 80 });
-    }
-
-    await pipeline.toFile(filePath);
-    return filePath;
-};
 
 exports.submitTask = (req, res) => {
     upload(req, res, async function (err) {
@@ -63,18 +56,19 @@ exports.submitTask = (req, res) => {
                 sketchWidth,
             } = req.body;
 
-            // Process files using sharp
+            // Process files - Cloudinary returns the URL in `path` or `secure_url`
             const photoPaths = [];
             if (req.files.photos) {
                 for (const file of req.files.photos) {
-                    const savedPath = await processImage(file.buffer, file.originalname, 'photo');
-                    photoPaths.push(savedPath);
+                    // file.path contains the Cloudinary URL
+                    photoPaths.push(file.path);
                 }
             }
 
             let sketchPath = null;
+
             if (req.files.sketch) {
-                sketchPath = await processImage(req.files.sketch[0].buffer, req.files.sketch[0].originalname, 'sketch');
+                sketchPath = req.files.sketch[0].path;
             }
 
             const taskData = {
@@ -150,8 +144,9 @@ exports.updateTask = (req, res) => {
             const { dimensions, sketchHeight, sketchLength, sketchWidth } = req.body;
 
             let sketchPath = null;
+
             if (req.files.sketch) {
-                sketchPath = await processImage(req.files.sketch[0].buffer, req.files.sketch[0].originalname, 'sketch');
+                sketchPath = req.files.sketch[0].path;
             }
 
             const updateData = {};
