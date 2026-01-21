@@ -45,8 +45,9 @@ exports.submitTask = (req, res) => {
                 technicianName,
                 technicianEmail,
                 technicianPhone,
-                specifications,
-                dimensions,
+                length,
+                width,
+                height,
                 type,
                 description,
                 latitude,
@@ -78,8 +79,9 @@ exports.submitTask = (req, res) => {
                     phone: technicianPhone,
                 },
                 photos: photoPaths,
-                specifications,
-                dimensions,
+                length,
+                width,
+                height,
                 type,
                 description,
                 location: {
@@ -152,7 +154,7 @@ exports.updateTask = (req, res) => {
 
         try {
             const taskId = req.params.id;
-            const { dimensions, sketchHeight, sketchLength, sketchWidth } = req.body;
+            const { length, width, height, sketchHeight, sketchLength, sketchWidth } = req.body;
 
             let sketchPath = null;
 
@@ -161,8 +163,14 @@ exports.updateTask = (req, res) => {
             }
 
             const updateData = {};
-            if (dimensions) {
-                updateData.dimensions = dimensions;
+            if (length) {
+                updateData.length = length;
+            }
+            if (width) {
+                updateData.width = width;
+            }
+            if (height) {
+                updateData.height = height;
             }
 
             if (sketchPath) {

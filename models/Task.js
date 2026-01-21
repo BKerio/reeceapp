@@ -9,8 +9,9 @@ const TaskSchema = new mongoose.Schema(
         },
         photos: [{ type: String }], // Array of file paths/URLs
         sketch: { type: String }, // Sketch image path
-        specifications: { type: String },
-        dimensions: { type: String },
+        length: { type: String },
+        width: { type: String },
+        height: { type: String },
         sketchMeasurements: {
             height: { type: String },
             length: { type: String },
