@@ -110,6 +110,18 @@ exports.getStatistics = async (req, res) => {
         res.status(500).json({ message: "Failed to fetch statistics" });
     }
 };
+
+// Get all registered technicians (users)
+exports.getAllTechnicians = async (req, res) => {
+    try {
+        const User = require("../models/User");
+        const users = await User.find().select("-password").sort({ createdAt: -1 });
+        res.status(200).json(users);
+    } catch (error) {
+        console.error("Fetch technicians error:", error);
+        res.status(500).json({ message: "Failed to fetch technicians" });
+    }
+};
 // Get current admin profile
 exports.getMe = async (req, res) => {
     try {

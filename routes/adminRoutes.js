@@ -21,4 +21,7 @@ router.get("/tasks", adminController.getAllTasks);
 // Get statistics
 router.get("/statistics", adminController.getStatistics);
 
+// Get all technicians
+router.get("/technicians", auth, adminController.getAllTechnicians);
+
 module.exports = router;

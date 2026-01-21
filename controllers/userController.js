@@ -166,3 +166,23 @@ exports.resetPassword = async (req, res) => {
         res.status(500).json({ message: "Reset failed" });
     }
 };
+
+// Update reminder preference
+exports.updateReminders = async (req, res) => {
+    try {
+        const { enabled } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.remindersEnabled = enabled;
+        await user.save();
+
+        res.json({ message: "Reminder preference updated", remindersEnabled: user.remindersEnabled });
+    } catch (error) {
+        console.error("Update reminders error:", error);
+        res.status(500).json({ message: "Failed to update preference" });
+    }
+};

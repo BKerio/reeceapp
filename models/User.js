@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
     otpExpiry: {
       type: Date,
     },
+    remindersEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
