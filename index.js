@@ -7,6 +7,7 @@ const taskRoutes = require("./routes/taskRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const auditRoutes = require("./routes/auditRoutes");
 const path = require("path");
+const { initReminders } = require("./services/reminderService");
 
 const app = express();
 
@@ -36,6 +37,9 @@ mongoose.connect(process.env.MONGO_URI)
 app.get("/", (req, res) => {
   res.json({ status: "Server running with MongoDB" });
 });
+
+// Initialize Cron Jobs
+initReminders();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
